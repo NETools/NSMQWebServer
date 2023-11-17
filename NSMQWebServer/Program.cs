@@ -1,16 +1,17 @@
+using BlazorSessionScopedContainer.Core;
+using NSMQWebServer.Persistence;
 using NSMQWebServer.Services;
 using NSMQWebServer.Websockets;
 
 var builder = WebApplication.CreateBuilder(args);
-var messageQueueServices = new MessageQueueServices();
 
-// Add services to the container.
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<NSession>();
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton(messageQueueServices);
+
 
 var app = builder.Build();
 
@@ -29,13 +30,18 @@ app.UseWebSockets(webSocketOptions);
 
 app.Use(async (context, next) =>
 {
+	var scope = app.Services.CreateAsyncScope();
+	var session = scope.ServiceProvider.GetService<NSession>();
+	InitSession(session);
+
 	if (context.Request.Path == "/")
 	{
 		if (context.WebSockets.IsWebSocketRequest)
 		{
-			using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-			var listener = new ApiClient(webSocket, messageQueueServices);
+			var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+			var listener = new ApiClient(webSocket, session);
 			await listener.Start();
+
 		}
 		else
 		{
@@ -54,3 +60,19 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+
+void InitSession(NSession? session)
+{
+	if(session == null)
+		throw new ArgumentNullException(nameof(session));
+
+	session.StartSession((id, handler) =>
+	{
+		handler.SetCurrentMigrationContext(new BasicMigrationContext());
+
+		handler.AddGlobalService<ConnectivityServices>();
+		handler.AddGlobalService<ChannelServices>();
+	});
+
+}
