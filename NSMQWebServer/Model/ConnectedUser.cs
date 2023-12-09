@@ -7,6 +7,7 @@ namespace NSMQWebServer.Model
 	{
 		public ApiClient Connection { get; set; }
 		public User User { get; set; }
+		public HashSet<string> ChannelIds { get; set; } = new HashSet<string>();
 
 	}
 }

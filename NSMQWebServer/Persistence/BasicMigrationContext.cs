@@ -6,7 +6,7 @@ namespace NSMQWebServer.Persistence
 {
 	public class BasicMigrationContext : IMigrationContext
 	{
-		private MessageQueueDbContext _dbContext = new MessageQueueDbContext();
+		private static MessageQueueDbContext _dbContext = new MessageQueueDbContext();
 
 		public T RetrieveData<T>(Dictionary<string, dynamic> arguments, object[] dependencies)
 		{

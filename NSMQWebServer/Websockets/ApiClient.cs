@@ -31,8 +31,11 @@ namespace NSMQWebServer.Websockets
 				case MessageType.Subscribe:
 					await SubscribeUser(message, message.StructBuffer.ToStruct<NSQMSubscribeMessage>(Encoding.UTF8));
 					break;
-				case MessageType.Task: // .....
+				case MessageType.Task:
 					await CreateTask(message, message.StructBuffer.ToStruct<NSQMTaskMessage>(Encoding.UTF8));
+					break;
+				case MessageType.TaskStream:
+					await StreamTask(message, message.StructBuffer.ToStruct<NSQMTaskMessage>(Encoding.UTF8));
 					break;
 				case MessageType.Ack:
 					await Acknowledge(message, message.StructBuffer.ToStruct<NSQMAck>(Encoding.UTF8));
@@ -62,6 +65,12 @@ namespace NSMQWebServer.Websockets
 		{
 			var createResponse = await _channelServices.CreateTask(taskMessage.Map<NSQMTaskMessage, TaskData>());
 			await Reply<TaskData>(message, createResponse);
+		}
+
+		private async Task StreamTask(NSQMessage message, NSQMTaskMessage taskMessage)
+		{
+			await _channelServices.StreamTask(taskMessage.Map<NSQMTaskMessage, TaskData>());
+			// await Reply<TaskData>(message, streamResponse); not recommended, since unnecessary overhead
 		}
 
 		private async Task SubscribeUser(NSQMessage message, NSQMSubscribeMessage subscribeMessage)

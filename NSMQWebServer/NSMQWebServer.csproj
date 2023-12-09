@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <Reference Include="BlazorSessionScopedContainer">
-      <HintPath>..\..\..\..\Documents\Desktop IV\Microservice\BlazorSessionScopedContainer\BlazorSessionScopedContainer\bin\Debug\net7.0\BlazorSessionScopedContainer.dll</HintPath>
+      <HintPath>..\..\..\..\Documents\Desktop IV\Microservice\BlazorSessionScopedContainer\BlazorSessionScopedContainer\bin\Debug\net8.0\BlazorSessionScopedContainer.dll</HintPath>
     </Reference>
     <Reference Include="NSQM.Data">
       <HintPath>..\..\NSQM.Data\NSQM.Data\bin\Debug\net8.0\NSQM.Data.dll</HintPath>
