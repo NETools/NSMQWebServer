@@ -35,17 +35,26 @@ namespace NSMQWebServer.Services
 
 		public async Task<ApiResponseL1<Channel>> CreateChannel(string channelId)
 		{
-			return await Context.CreateChannel(channelId);
+			var channel = await Context.CreateChannel(channelId);
+			return channel;
+		}
+
+		public async Task<ApiResponseL1<TaskData>> StreamTask(TaskData taskData)
+		{
+			await _connectivityServices.Send(taskData.FromId, taskData.ToId, taskData, true);
+			return ApiResponseL1<TaskData>.Ok(taskData, "Task successfully streamed.", ApiResponseL1.TaskDataCreated);
 		}
 
 		public async Task<ApiResponseL1<TaskData>> CreateTask(TaskData taskData)
 		{
-				var response = await Context.CreateTaskData(taskData);
-			if(response.Status != ApiStatusCode.Ok && response.Status != ApiStatusCode.Warning)
+			var response = await Context.CreateTaskData(taskData);
+			if (response.Status != ApiStatusCode.Ok && response.Status != ApiStatusCode.Warning)
 			{
 				return response;
 			}
-			return (await AddTaskToUser(taskData)).ConvertTo<TaskData>(model => response.Model);
+			var result = (await AddTaskToUser(taskData)).ConvertTo<TaskData>(model => response.Model);
+
+			return result;
 		}
 
 		public async Task<ApiResponseL1<User>> AddUserToChannel(string channelId, Guid userId)
@@ -63,29 +72,35 @@ namespace NSMQWebServer.Services
 				{
 					if (task.ToId != userId && task.ToId != Guid.Empty)
 						continue;
-					await _connectivityServices.Send(task.FromId, userId, task);
+					await _connectivityServices.Send(task.FromId, userId, task, false);
 				}
 			});
+
+			_connectivityServices.RegisterUserChannel(user, channelId);
+
 			return response;
 		}
 
-		public async Task<ApiResponseL1<User>> AddTaskToUser(TaskData taskData) 
+		public async Task<ApiResponseL1<User>> AddTaskToUser(TaskData taskData)
 		{
 			var response = await Context.AddTaskToUser(taskData.FromId, taskData.PhaseId);
 			if (response.Status != ApiStatusCode.Ok && response.Status != ApiStatusCode.Warning)
 				return response;
-			await _connectivityServices.Send(taskData.FromId, taskData.ToId, taskData);
+			await _connectivityServices.Send(taskData.FromId, taskData.ToId, taskData, false);
+
 			return response;
 		}
 
 		public async Task<ApiResponseL1<User>> RemoveTaskFromUser(Guid userId, Guid taskId)
 		{
-			return await Context.RemoveTaskFromUser(userId, taskId);
+			var user = await Context.RemoveTaskFromUser(userId, taskId);
+			return user;
 		}
 
 		public async Task<ApiResponseL1<TaskData>> RemoveTask(Guid taskId)
 		{
-			return await Context.RemoveTaskData(taskId);
+			var taskData = await Context.RemoveTaskData(taskId);
+			return taskData;
 		}
 
 	}

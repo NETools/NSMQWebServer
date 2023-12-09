@@ -9,7 +9,7 @@ using NSQM.Data.Model.Response;
 namespace NSMQWebServer.Controllers
 {
 	[ApiController]
-	[Route("/MQ/API")]
+	[Route("/")]
 	public class MessageQueueController : ControllerBase
 	{
 		public NSession Session { get; set; }
@@ -21,7 +21,7 @@ namespace NSMQWebServer.Controllers
 			CoreServices = Session.GetGlobalService<ChannelServices>();
 		}
 
-		[HttpPost("/CreateChannel/{ChannelName}")]
+		[HttpPost("CreateChannel/{ChannelName}")]
 		public async Task<IActionResult> CreateChannel([FromRoute] string ChannelName)
 		{
 			var result = await CoreServices.CreateChannel(ChannelName);
@@ -29,12 +29,20 @@ namespace NSMQWebServer.Controllers
 			return httpResponse.Accept();
 		}
 
-		[HttpPost("/CreateTask/")]
+		[HttpPost("CreateTask/")]
 		public async Task<IActionResult> CreateTask([FromBody] TaskData taskData)
 		{
 			var result = await CoreServices.CreateTask(taskData);
 			var httpResponse = new ApiResponseL2<TaskData>(result);
 			return httpResponse.Accept();
 		}
+
+		//[HttpPost("StreamTask/")]
+		//public async Task<IActionResult> SendTask([FromBody] TaskData taskData)
+		//{
+		//	var result = await CoreServices.StreamTask(taskData);
+		//	var httpResponse = new ApiResponseL2<TaskData>(result);
+		//	return httpResponse.Accept();
+		//}
 	}
 }
