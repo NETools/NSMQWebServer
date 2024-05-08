@@ -42,7 +42,7 @@ namespace NSMQWebServer.Services
 				for (int i = 0; i < _connectedUsers.Count; i++)
 				{
 					var p = _connectedUsers[i];
-					if (p.User.UserType != message.AddresseeType || !p.ChannelIds.Contains(message.ChannelId))
+					if (p.User.UserType != message.AddresseeType || !p.ChannelIds.Contains(message.ChannelId) || p.User.UserId == message.FromId)
 						continue;
 					await p.Connection.Send(taskMessage);
 				}
@@ -73,7 +73,7 @@ namespace NSMQWebServer.Services
 
 		public bool RegisterConnection(ApiClient client, User? user)
 		{
-			if (_connectedUsers.Any(p => p.User.UserId == user.UserId))
+			if (_connectedUsers.Any(p => p.User != null && p.User.UserId == user.UserId))
 				return false;
 
 			var connectedUser = new ConnectedUser()
@@ -96,7 +96,7 @@ namespace NSMQWebServer.Services
 
 		public bool UserConnected(User user)
 		{
-			return _connectedUsers.Any(p => p.User.UserId == user.UserId);
+			return _connectedUsers.Any(p => p.User != null && p.User.UserId == user.UserId);
 		}
 
 		private async void UserDisconnected(Guid clientId)
@@ -107,7 +107,11 @@ namespace NSMQWebServer.Services
 
 
 			var connectedUser = _connectedUsers.Find(p => p.Connection.Id == clientId);
-			if (connectedUser == null) return;
+			if (connectedUser == null) 
+				return;
+			if (connectedUser.User == null)
+				return;
+
 			var userId = connectedUser.User.UserId;
 			await Context.RemoveUser(userId);
 			_connectedUsers.RemoveAll(p => p.User.UserId == userId);
